@@ -1,0 +1,19 @@
+{
+  "name": "rootfund",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rootfund: quadratic funding with AI fraud detection on PayPal Orders, Payouts, Refunds and Webhooks",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "build": "npm --prefix server install && npm --prefix client install --include=dev && npm --prefix client run build",
+    "start": "node server/src/index.js",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "test": "npm --prefix server test",
+    "ml:data": "node scripts/export-dataset.js",
+    "ml:all": "node scripts/ml-all.js",
+    "gate1": "node scripts/gate1.js"
+  }
+}

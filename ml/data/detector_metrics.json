@@ -1,0 +1,193 @@
+{
+  "config": {
+    "n_estimators": 80,
+    "max_depth": 3,
+    "threshold": 0.5,
+    "train_scenarios": 45,
+    "ring_size": 120
+  },
+  "loao": {
+    "naive": {
+      "precision": 0.9988,
+      "recall": 0.9333,
+      "f1": 0.965,
+      "tp": 1680,
+      "fp": 2,
+      "fn": 120
+    },
+    "jitter": {
+      "precision": 0.9946,
+      "recall": 0.9144,
+      "f1": 0.9528,
+      "tp": 1646,
+      "fp": 9,
+      "fn": 154
+    },
+    "adaptive": {
+      "precision": 0.9885,
+      "recall": 0.2383,
+      "f1": 0.3841,
+      "tp": 429,
+      "fp": 5,
+      "fn": 1371
+    },
+    "evasive": {
+      "precision": 0.902,
+      "recall": 0.0767,
+      "f1": 0.1413,
+      "tp": 138,
+      "fp": 15,
+      "fn": 1662
+    }
+  },
+  "baseline_rule": {
+    "naive": {
+      "precision": 0.6233,
+      "recall": 1.0,
+      "f1": 0.7679,
+      "tp": 1800,
+      "fp": 1088,
+      "fn": 0
+    },
+    "jitter": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1800
+    },
+    "adaptive": {
+      "precision": 0.405,
+      "recall": 0.2178,
+      "f1": 0.2832,
+      "tp": 392,
+      "fp": 576,
+      "fn": 1408
+    },
+    "evasive": {
+      "precision": 0.4919,
+      "recall": 1.0,
+      "f1": 0.6595,
+      "tp": 1800,
+      "fp": 1859,
+      "fn": 0
+    }
+  },
+  "baseline_rules": {
+    "naive": {
+      "domain_share_gt": 0.6,
+      "burst_gt": 0.5
+    },
+    "jitter": {
+      "domain_share_gt": 0.6,
+      "burst_gt": 12
+    },
+    "adaptive": {
+      "domain_share_gt": 0.6,
+      "burst_gt": 1
+    },
+    "evasive": {
+      "domain_share_gt": 0.6,
+      "burst_gt": 0.5
+    }
+  },
+  "family_holdout": {
+    "naive": {
+      "precision": 0.9983,
+      "recall": 1.0,
+      "f1": 0.9992,
+      "tp": 600,
+      "fp": 1,
+      "fn": 0
+    },
+    "jitter": {
+      "precision": 0.9967,
+      "recall": 1.0,
+      "f1": 0.9983,
+      "tp": 600,
+      "fp": 2,
+      "fn": 0
+    },
+    "adaptive": {
+      "precision": 0.9885,
+      "recall": 1.0,
+      "f1": 0.9942,
+      "tp": 600,
+      "fp": 7,
+      "fn": 0
+    }
+  },
+  "family_holdout_baseline_rule": {
+    "naive": {
+      "precision": 0.616,
+      "recall": 1.0,
+      "f1": 0.7624,
+      "tp": 600,
+      "fp": 374,
+      "fn": 0
+    },
+    "jitter": {
+      "precision": 0.4853,
+      "recall": 0.66,
+      "f1": 0.5593,
+      "tp": 396,
+      "fp": 420,
+      "fn": 204
+    },
+    "adaptive": {
+      "precision": 0.3715,
+      "recall": 0.5783,
+      "f1": 0.4524,
+      "tp": 347,
+      "fp": 587,
+      "fn": 253
+    }
+  },
+  "ring250": {
+    "naive": {
+      "precision": 0.9992,
+      "recall": 1.0,
+      "f1": 0.9996,
+      "tp": 1250,
+      "fp": 1,
+      "fn": 0
+    },
+    "jitter": {
+      "precision": 0.9984,
+      "recall": 1.0,
+      "f1": 0.9992,
+      "tp": 1250,
+      "fp": 2,
+      "fn": 0
+    },
+    "adaptive": {
+      "precision": 0.9936,
+      "recall": 1.0,
+      "f1": 0.9968,
+      "tp": 1250,
+      "fp": 8,
+      "fn": 0
+    },
+    "evasive": {
+      "precision": 0.8302,
+      "recall": 0.0704,
+      "f1": 0.1298,
+      "tp": 88,
+      "fp": 18,
+      "fn": 1162
+    }
+  },
+  "feature_importance": {
+    "log_mean_amount": 0.9191,
+    "surge": 0.0758,
+    "n_projects": 0.0021,
+    "std_amount": 0.0013,
+    "same_set_share": 0.0009,
+    "inv_n_projects": 0.0007,
+    "burst": 0.0001,
+    "domain_share": 0.0,
+    "digit_frac": 0.0,
+    "tiny_round": 0.0
+  }
+}

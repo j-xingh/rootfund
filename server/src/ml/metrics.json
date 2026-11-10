@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "seeds": 15,
+    "honestDonors": 250,
+    "ringSize": 250,
+    "poolUsd": 1000,
+    "targetProject": "p7",
+    "trainedOn": [
+      "adaptive",
+      "jitter",
+      "naive"
+    ],
+    "note": "Simulated data. evasive is never seen in training.",
+    "generatedAt": "2026-11-10T20:44:20.864Z"
+  },
+  "attacks": {
+    "naive": {
+      "precision": 0.991,
+      "recall": 1,
+      "f1": 0.995,
+      "honestDonorsFlagged": 2.267,
+      "hybrid": {
+        "recall": 1,
+        "honestDonorsFlagged": 2.467
+      },
+      "baselineRule": {
+        "precision": 0.999,
+        "recall": 1,
+        "poolShareAfterExclusion": 0.013
+      },
+      "targetPoolShare": {
+        "naive": 0.249,
+        "hybrid": 0.011,
+        "hybridCapped": 0.011,
+        "hard": 0.011,
+        "soft": 0.026,
+        "tiered": 0.011,
+        "rule": 0.013,
+        "clean": 0.013
+      }
+    },
+    "jitter": {
+      "precision": 0.991,
+      "recall": 1,
+      "f1": 0.995,
+      "honestDonorsFlagged": 2.4,
+      "hybrid": {
+        "recall": 1,
+        "honestDonorsFlagged": 2.4
+      },
+      "baselineRule": {
+        "precision": 0,
+        "recall": 0,
+        "poolShareAfterExclusion": 0.409
+      },
+      "targetPoolShare": {
+        "naive": 0.409,
+        "hybrid": 0.011,
+        "hybridCapped": 0.011,
+        "hard": 0.011,
+        "soft": 0.045,
+        "tiered": 0.013,
+        "rule": 0.409,
+        "clean": 0.013
+      }
+    },
+    "adaptive": {
+      "precision": 0.977,
+      "recall": 0.995,
+      "f1": 0.986,
+      "honestDonorsFlagged": 5.867,
+      "hybrid": {
+        "recall": 0.995,
+        "honestDonorsFlagged": 5.867
+      },
+      "baselineRule": {
+        "precision": 0,
+        "recall": 0,
+        "poolShareAfterExclusion": 0.334
+      },
+      "targetPoolShare": {
+        "naive": 0.334,
+        "hybrid": 0.012,
+        "hybridCapped": 0.012,
+        "hard": 0.012,
+        "soft": 0.065,
+        "tiered": 0.017,
+        "rule": 0.334,
+        "clean": 0.013
+      }
+    },
+    "evasive": {
+      "precision": 0.922,
+      "recall": 0.535,
+      "f1": 0.677,
+      "honestDonorsFlagged": 11.533,
+      "hybrid": {
+        "recall": 0.932,
+        "honestDonorsFlagged": 11.867
+      },
+      "baselineRule": {
+        "precision": 0.998,
+        "recall": 0.87,
+        "poolShareAfterExclusion": 0.05
+      },
+      "targetPoolShare": {
+        "naive": 0.309,
+        "hybrid": 0.032,
+        "hybridCapped": 0.032,
+        "hard": 0.194,
+        "soft": 0.238,
+        "tiered": 0.219,
+        "rule": 0.05,
+        "clean": 0.013
+      }
+    }
+  },
+  "leaveOneOut": {
+    "naive": {
+      "precision": 0.988,
+      "recall": 1,
+      "f1": 0.994,
+      "honestDonorsFlagged": 2.933,
+      "hybrid": {
+        "recall": 1,
+        "honestDonorsFlagged": 3.133
+      },
+      "baselineRule": {
+        "precision": 0.999,
+        "recall": 1,
+        "poolShareAfterExclusion": 0.013
+      },
+      "targetPoolShare": {
+        "naive": 0.249,
+        "hybrid": 0.01,
+        "hybridCapped": 0.01,
+        "hard": 0.011,
+        "soft": 0.078,
+        "tiered": 0.011,
+        "rule": 0.013,
+        "clean": 0.013
+      }
+    },
+    "jitter": {
+      "precision": 0.99,
+      "recall": 0.399,
+      "f1": 0.567,
+      "honestDonorsFlagged": 1,
+      "hybrid": {
+        "recall": 0.399,
+        "honestDonorsFlagged": 1
+      },
+      "baselineRule": {
+        "precision": 0,
+        "recall": 0,
+        "poolShareAfterExclusion": 0.409
+      },
+      "targetPoolShare": {
+        "naive": 0.409,
+        "hybrid": 0.265,
+        "hybridCapped": 0.265,
+        "hard": 0.265,
+        "soft": 0.31,
+        "tiered": 0.305,
+        "rule": 0.409,
+        "clean": 0.013
+      }
+    },
+    "adaptive": {
+      "precision": 0,
+      "recall": 0,
+      "f1": 0,
+      "honestDonorsFlagged": 0,
+      "hybrid": {
+        "recall": 0,
+        "honestDonorsFlagged": 0
+      },
+      "baselineRule": {
+        "precision": 0,
+        "recall": 0,
+        "poolShareAfterExclusion": 0.334
+      },
+      "targetPoolShare": {
+        "naive": 0.334,
+        "hybrid": 0.334,
+        "hybridCapped": 0.334,
+        "hard": 0.334,
+        "soft": 0.334,
+        "tiered": 0.334,
+        "rule": 0.334,
+        "clean": 0.013
+      }
+    }
+  }
+}

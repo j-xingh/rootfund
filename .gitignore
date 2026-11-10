@@ -1,0 +1,9 @@
+node_modules/
+.env
+.DS_Store
+client/dist/
+ml/data/*.csv
+ml/data/model_loo_*
+__pycache__/
+*.pyc
+.venv/
