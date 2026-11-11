@@ -67,12 +67,14 @@ test('refund uses the capture refund endpoint with explicit amount', async () =>
 test('verifyWebhook posts PayPal transmission headers and the event', async () => {
   const { f, calls } = fakeFetch({ 'POST /v1/notifications/verify-webhook-signature': { status: 200, json: { verification_status: 'SUCCESS' } } });
   const headers = { 'paypal-auth-algo': 'SHA256withRSA', 'paypal-cert-url': 'https://c', 'paypal-transmission-id': 'T1', 'paypal-transmission-sig': 'S', 'paypal-transmission-time': '2026-11-10T00:00:00Z' };
-  const ok = await createPayPalClient(cfg, f).verifyWebhook({ headers, rawBody: Buffer.from('{"id":"WH-1","event_type":"X"}') });
+  const raw = '{"id": "WH-1", "event_type":"X", "amount": 1.0}'; // spacing and 1.0 would be lost by JSON.stringify
+  const ok = await createPayPalClient(cfg, f).verifyWebhook({ headers, rawBody: Buffer.from(raw) });
   assert.strictEqual(ok, true);
+  assert.ok(calls[1].opts.body.endsWith(`"webhook_event":${raw}}`), 'event must be sent byte-for-byte');
   const b = JSON.parse(calls[1].opts.body);
   assert.strictEqual(b.webhook_id, 'WH123');
   assert.strictEqual(b.transmission_id, 'T1');
-  assert.deepStrictEqual(b.webhook_event, { id: 'WH-1', event_type: 'X' });
+  assert.deepStrictEqual(b.webhook_event, { id: 'WH-1', event_type: 'X', amount: 1 });
 });
 
 test('PayPal errors are normalized', async () => {

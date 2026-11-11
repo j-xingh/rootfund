@@ -38,7 +38,8 @@ function createPayPalClient(cfg, fetchImpl = globalThis.fetch) {
     const headers = { Authorization: `Bearer ${await getToken()}`, 'Content-Type': 'application/json' };
     if (requestId) headers['PayPal-Request-Id'] = requestId;
     if (prefer) headers.Prefer = prefer;
-    const res = await fetchImpl(`${cfg.paypalBaseUrl}${path}`, { method, headers, body: body ? JSON.stringify(body) : undefined });
+    const payload = body == null ? undefined : typeof body === 'string' ? body : JSON.stringify(body); // strings are sent as-is
+    const res = await fetchImpl(`${cfg.paypalBaseUrl}${path}`, { method, headers, body: payload });
     const text = await res.text();
     let json = {};
     try { json = text ? JSON.parse(text) : {}; } catch { json = { message: text }; }
@@ -136,17 +137,19 @@ function createPayPalClient(cfg, fetchImpl = globalThis.fetch) {
     /** Uses PayPal's verify-webhook-signature endpoint. rawBody must be the exact bytes PayPal sent. */
     async verifyWebhook({ headers, rawBody }) {
       if (!cfg.paypalWebhookId) return false;
-      const r = await request('POST', '/v1/notifications/verify-webhook-signature', {
-        body: {
-          auth_algo: headers['paypal-auth-algo'],
-          cert_url: headers['paypal-cert-url'],
-          transmission_id: headers['paypal-transmission-id'],
-          transmission_sig: headers['paypal-transmission-sig'],
-          transmission_time: headers['paypal-transmission-time'],
-          webhook_id: cfg.paypalWebhookId,
-          webhook_event: JSON.parse(rawBody.toString('utf8')),
-        },
+      const raw = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : String(rawBody || '');
+      JSON.parse(raw); // throws on a non-JSON body, so garbage never reaches PayPal
+      const meta = JSON.stringify({
+        auth_algo: headers['paypal-auth-algo'],
+        cert_url: headers['paypal-cert-url'],
+        transmission_id: headers['paypal-transmission-id'],
+        transmission_sig: headers['paypal-transmission-sig'],
+        transmission_time: headers['paypal-transmission-time'],
+        webhook_id: cfg.paypalWebhookId,
       });
+      // Splice the event in byte-for-byte: re-serializing it can change it and make verification fail.
+      const body = `${meta.slice(0, -1)},"webhook_event":${raw}}`;
+      const r = await request('POST', '/v1/notifications/verify-webhook-signature', { body });
       return r.verification_status === 'SUCCESS';
     },
   };
