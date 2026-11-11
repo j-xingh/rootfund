@@ -140,11 +140,13 @@ function createApp({ store, paypal, cfg, model, metrics }) {
 
   app.post('/api/donations/checkout', ah(async (req, res) => {
     const { projectId, amountUsd } = req.body || {};
+    if (typeof projectId !== 'string') throw httpError(400, 'projectId must be a string'); // blocks {"$ne":null} in Mongo
     const project = await store.get('projects', projectId);
     if (!project) throw httpError(400, 'unknown projectId');
     const amt = Number(amountUsd);
     if (!Number.isInteger(amt) || amt < 1 || amt > 100) throw httpError(400, 'amountUsd must be a whole number from 1 to 100');
     const round = await store.get('rounds', ROUND_ID);
+    if (round.status !== 'OPEN') throw httpError(409, 'this round is closed to new donations', 'ROUND_CLOSED');
     const d = await store.insert('donations', {
       roundId: ROUND_ID, projectId, donorKey: 'pending', email: null, amountUsd: amt, t: hoursSince(round.openedAt),
       source: 'paypal', status: 'CREATED', createdAt: new Date().toISOString(), paypal: {},

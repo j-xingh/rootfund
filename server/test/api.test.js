@@ -123,3 +123,14 @@ test('ledger works while a donation is still unpaid (email is null)', async () =
   assert.strictEqual(body.items[0].emailMasked, '***');
   stop();
 });
+
+test('checkout rejects non-string projectId and closed rounds', async () => {
+  const { j, stop } = await boot();
+  const post = (b) => j('/api/donations/checkout', { method: 'POST', headers: JSONH, body: JSON.stringify(b) });
+  assert.strictEqual((await post({ projectId: { $ne: null }, amountUsd: 5 })).r.status, 400);
+  await j('/api/admin/settle', { method: 'POST', headers: ADMIN, body: JSON.stringify({ approve: true }) });
+  const closed = await post({ projectId: 'p1', amountUsd: 5 });
+  assert.strictEqual(closed.r.status, 409);
+  assert.strictEqual(closed.body.error.code, 'ROUND_CLOSED');
+  stop();
+});
