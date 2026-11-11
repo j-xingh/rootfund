@@ -195,3 +195,18 @@ test('settlement polling does not call PayPal once the batch is final', async ()
   assert.strictEqual(calls, 2, 'reconcile always re-reads PayPal');
   stop();
 });
+
+test('reconcile captures an order the buyer approved but never returned from', async () => {
+  const { j, base, store, stop } = await boot();
+  const { body: co } = await j('/api/donations/checkout', { method: 'POST', headers: JSONH, body: JSON.stringify({ projectId: 'p3', amountUsd: 7 }) });
+  const order = new URL(co.approveUrl).searchParams.get('order');
+  await fetch(`${base}/mock-paypal/pay?order=${order}&payer=2`, { redirect: 'manual' }); // approve, but skip the return URL
+  assert.strictEqual((await store.get('donations', co.donationId)).status, 'CREATED');
+  const { body } = await j('/api/admin/reconcile', { method: 'POST', headers: ADMIN, body: '{}' });
+  assert.strictEqual(body.donationsUpdated, 1);
+  assert.deepStrictEqual(body.errors, []);
+  const d = await store.get('donations', co.donationId);
+  assert.strictEqual(d.status, 'CAPTURED');
+  assert.ok(d.paypal.captureId && d.email === 'mock-donor-3@example.com');
+  stop();
+});

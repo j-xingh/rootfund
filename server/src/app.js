@@ -203,13 +203,18 @@ function createApp({ store, paypal, cfg, model, metrics }) {
       if (!already) { console.error('capture failed:', e.message, e.debugId || ''); return res.redirect('/?donation=error&reason=capture_failed'); }
       cap = await paypal.getOrder(token);
     }
-    const completed = !cap.status || cap.status === 'COMPLETED';
-    await store.patch('donations', d._id, {
-      status: completed ? 'CAPTURED' : 'PENDING_REVIEW', donorKey: cap.payerId || d._id, email: cap.email || null,
-      'paypal.captureId': cap.captureId, 'paypal.payerId': cap.payerId, 'paypal.accountStatus': cap.accountStatus || null, 'paypal.status': cap.status || 'COMPLETED',
-    });
+    await saveCapture(d, cap);
     res.redirect(`/?donation=ok&d=${d._id}`);
   }));
+
+  // One place that writes a capture onto a donation (used by the return URL and by reconcile).
+  async function saveCapture(d, cap) {
+    const completed = !cap.status || cap.status === 'COMPLETED';
+    await store.patch('donations', d._id, {
+      status: completed ? 'CAPTURED' : 'PENDING_REVIEW', donorKey: cap.payerId || d._id, email: cap.email || d.email || null,
+      'paypal.captureId': cap.captureId, 'paypal.payerId': cap.payerId, 'paypal.accountStatus': cap.accountStatus || d.paypal?.accountStatus || null, 'paypal.status': cap.status || 'COMPLETED',
+    });
+  }
 
   // ---------- admin API ----------
   app.post('/api/admin/attack', requireAdmin, ah(async (req, res) => {
@@ -264,14 +269,19 @@ function createApp({ store, paypal, cfg, model, metrics }) {
   }));
 
   app.post('/api/admin/reconcile', requireAdmin, ah(async (_req, res) => {
-    const out = { donationsUpdated: 0, settlement: null };
+    const out = { donationsUpdated: 0, errors: [], settlement: null };
     for (const d of await store.find('donations', { source: 'paypal' })) {
-      if (['CREATED', 'PENDING_REVIEW'].includes(d.status) && d.paypal?.orderId) {
-        const o = await paypal.getOrder(d.paypal.orderId).catch(() => null);
-        if (o && o.status === 'COMPLETED' && o.captureId) {
-          await store.patch('donations', d._id, { status: 'CAPTURED', donorKey: o.payerId || d._id, email: o.email || d.email, 'paypal.captureId': o.captureId, 'paypal.payerId': o.payerId });
+      if (!['CREATED', 'PENDING_REVIEW'].includes(d.status) || !d.paypal?.orderId) continue;
+      try {
+        let o = await paypal.getOrder(d.paypal.orderId);
+        // Buyer approved but never came back to our return URL: take the money now.
+        if (o.status === 'APPROVED') o = await paypal.captureOrder(d.paypal.orderId);
+        if (o.status === 'COMPLETED' && o.captureId) {
+          await saveCapture(d, o);
           out.donationsUpdated++;
         }
+      } catch (e) {
+        out.errors.push({ donationId: d._id, error: e.message, debugId: e.debugId || null });
       }
     }
     out.settlement = await refreshSettlement({ force: true });
