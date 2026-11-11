@@ -155,3 +155,27 @@ test('each reset gets a new payout sender_batch_id', async () => {
   assert.ok(first && second && first !== second, `${first} vs ${second}`);
   stop();
 });
+
+test('webhooks: COMPLETED falls back to order id; PENDING and REVERSED are handled', async () => {
+  const { j, base, store, stop } = await boot();
+  const checkout = async (p) => (await j('/api/donations/checkout', { method: 'POST', headers: JSONH, body: JSON.stringify({ projectId: p, amountUsd: 4 }) })).body.donationId;
+  const hook = (ev) => fetch(base + '/api/webhooks/paypal', { method: 'POST', headers: JSONH, body: JSON.stringify(ev) }).then((r) => r.json());
+  const related = (orderId) => ({ related_ids: { order_id: orderId } });
+
+  const a = await store.get('donations', await checkout('p1')); // never returned to us: no captureId yet
+  await hook({ id: 'WH-A', event_type: 'PAYMENT.CAPTURE.COMPLETED', resource: { id: 'CAP-A', supplementary_data: related(a.paypal.orderId) } });
+  const a2 = await store.get('donations', a._id);
+  assert.strictEqual(a2.status, 'CAPTURED');
+  assert.strictEqual(a2.paypal.captureId, 'CAP-A');
+
+  const b = await store.get('donations', await checkout('p2'));
+  await hook({ id: 'WH-B', event_type: 'PAYMENT.CAPTURE.PENDING', resource: { id: 'CAP-B', supplementary_data: related(b.paypal.orderId) } });
+  assert.strictEqual((await store.get('donations', b._id)).status, 'PENDING_REVIEW');
+
+  await hook({ id: 'WH-C', event_type: 'PAYMENT.CAPTURE.PENDING', resource: { id: 'CAP-A', supplementary_data: related(a.paypal.orderId) } });
+  assert.strictEqual((await store.get('donations', a._id)).status, 'CAPTURED', 'a late PENDING must not downgrade a capture');
+
+  await hook({ id: 'WH-D', event_type: 'PAYMENT.CAPTURE.REVERSED', resource: { id: 'REV-1', links: [{ rel: 'up', href: 'https://api/v2/payments/captures/CAP-A' }] } });
+  assert.strictEqual((await store.get('donations', a._id)).status, 'REVERSED');
+  stop();
+});

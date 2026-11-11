@@ -38,10 +38,30 @@ function createApp({ store, paypal, cfg, model, metrics }) {
 
   async function processEvent(event) {
     const r = event.resource || {};
+    // Find the donation by capture id; if the webhook beats the return handler, fall back to the order id.
+    const findByCapture = async () => {
+      let [d] = await store.find('donations', { 'paypal.captureId': r.id });
+      const orderId = r.supplementary_data?.related_ids?.order_id;
+      if (!d && orderId) [d] = await store.find('donations', { 'paypal.orderId': orderId });
+      return d;
+    };
+    const finalStates = ['REFUNDED', 'REVERSED'];
     switch (event.event_type) {
       case 'PAYMENT.CAPTURE.COMPLETED': {
-        const [d] = await store.find('donations', { 'paypal.captureId': r.id });
-        if (d && d.status !== 'REFUNDED') await store.patch('donations', d._id, { status: 'CAPTURED', 'paypal.status': 'COMPLETED' });
+        const d = await findByCapture();
+        if (d && !finalStates.includes(d.status)) await store.patch('donations', d._id, { status: 'CAPTURED', 'paypal.captureId': r.id, 'paypal.status': 'COMPLETED' });
+        break;
+      }
+      case 'PAYMENT.CAPTURE.PENDING': {
+        const d = await findByCapture();
+        if (d && !finalStates.includes(d.status) && d.status !== 'CAPTURED') await store.patch('donations', d._id, { status: 'PENDING_REVIEW', 'paypal.captureId': r.id, 'paypal.status': 'PENDING' });
+        break;
+      }
+      case 'PAYMENT.CAPTURE.REVERSED': {
+        // resource is a refund-like object whose "up" link points at the capture
+        const capId = ((r.links || []).find((l) => l.rel === 'up')?.href || '').split('/').pop();
+        const [d] = capId ? await store.find('donations', { 'paypal.captureId': capId }) : [];
+        if (d) await store.patch('donations', d._id, { status: 'REVERSED', 'paypal.status': 'REVERSED' });
         break;
       }
       case 'PAYMENT.CAPTURE.DENIED': {
