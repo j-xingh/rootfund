@@ -20,3 +20,5 @@ All responses are JSON. Admin endpoints need the header `x-admin-key: <ADMIN_KEY
 | `POST /api/admin/reconcile` | re-reads order and payout state from PayPal |
 
 Errors look like `{error: {code, message, debugId}}`.
+
+Rate limits per client IP, per minute: `POST /api/donations/checkout` 20, `/api/admin/*` 60, all `/api` 600. Over the limit: `429` with code `RATE_LIMITED` and a `Retry-After` header (seconds). `POST /api/webhooks/paypal` is never limited.

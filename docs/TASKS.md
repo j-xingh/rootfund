@@ -13,8 +13,8 @@ Status legend: DONE = written and tested here. CODE = written and unit-tested ag
 | B5 | Refund flow | CODE |
 | B6 | Round lifecycle, seed, attack injector, reset | DONE |
 | B7 | Integrity plumbing, admin refund and settle | DONE |
-| B8 | Hardening: validation, constant-time admin key, closed-round guard, raw-body webhook verify, PENDING/REVERSED webhooks, throttled payout polling, reconcile captures abandoned approvals, fresh payout batch id per reset. Left: rate limiting | PARTIAL |
-| B9 | Uptime ping, clean-clone test, deploy README | TODO |
+| B8 | Hardening: validation, constant-time admin key, closed-round guard, raw-body webhook verify, PENDING/REVERSED webhooks, throttled payout polling, reconcile captures abandoned approvals, fresh payout batch id per reset, per-IP rate limits | DONE |
+| B9 | Uptime ping, clean-clone test, deploy README | CODE: `render.yaml` blueprint, `npm run smoke`, docs/DEPLOY.md; clean clone installs, builds, passes 35 tests and both smoke modes (11 Nov). Left (manual): the cron-job.org ping once deployed |
 | B10 | Run the MongoDB store against Atlas (`MONGODB_URI`) and fix anything that breaks | PARTIAL: full flow passes on an in-memory MongoDB (`test/mongo-store.test.js`); still to run against the real Atlas cluster |
 
 ## Jay
@@ -35,5 +35,5 @@ Status legend: DONE = written and tested here. CODE = written and unit-tested ag
 ## Gate 1 (do first, together)
 
 1. `npm run gate1` prints PASS for: credentials and order, capture, refund, payout.
-2. Webhook registered on the deployed URL and a simulated event is accepted.
+2. Webhook registered on the deployed URL; a simulated event reaches it (shows in the Render logs) and `npm run smoke -- <url>` passes.
 3. A real donation made through the deployed site appears in the ledger.

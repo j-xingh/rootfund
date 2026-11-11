@@ -24,6 +24,7 @@ npm start                   # http://localhost:3000  (PAYPAL_MODE=mock)
 
 In mock mode a fake PayPal page stands in so you can build and test offline. For the real thing set `PAYPAL_MODE=sandbox`
 and follow [docs/SETUP-BEGINNER.md](docs/SETUP-BEGINNER.md).
+To deploy, see [docs/DEPLOY.md](docs/DEPLOY.md) (Render blueprint in `render.yaml`); `npm run smoke -- <url>` checks a running site.
 
 Run the tests: `npm test` (money math, detector parity with scikit-learn, API flows, PayPal request shapes).
 

@@ -58,7 +58,7 @@ npm start
 ```
 Open http://localhost:3000. You should see the funding bars. In `.env`, `ADMIN_KEY=change-me`; type that into the admin box at the bottom of the page, then click **Launch sybil attack**, then flip between **Naive QF** and **Rootfund protected**.
 Try a donation: the mock PayPal page lets you "pay" as a fake donor.
-Run the tests: `npm test`. Expected: 26 passing.
+Run the tests: `npm test`. Expected: 35 passing.
 
 For live editing while you work, open two terminals: `npm run dev:server` and `npm run dev:client`, then use http://localhost:5173.
 
@@ -88,13 +88,15 @@ For live editing while you work, open two terminals: `npm run dev:server` and `n
 
 ## Part F. Deploy on Render and register the webhook (backend developer, about 30 minutes)
 
+Shortcut: [DEPLOY.md](DEPLOY.md) does steps 1 to 4 with the `render.yaml` blueprint (**New, Blueprint**), and `npm run smoke -- <your Render URL>` checks the result.
+
 1. https://render.com, sign up with GitHub. **New, Web Service**, pick the `rootfund` repo.
 2. Settings: Runtime **Node**. Build Command `npm run build`. Start Command `npm start`. Instance type **Free**.
 3. Environment variables: everything from your `.env` (`PAYPAL_MODE=sandbox`, client ID and secret, `PROJECT_OWNER_EMAILS`, `MONGODB_URI`, `ADMIN_KEY` set to a **new** secret, `POOL_USD`), plus `NODE_VERSION=22`.
-4. After the first deploy Render shows your URL (`https://something.onrender.com`). Add `PUBLIC_BASE_URL` with that exact URL and redeploy (Manual Deploy).
+4. After the first deploy Render shows your URL (`https://something.onrender.com`). The app picks it up automatically (Render sets `RENDER_EXTERNAL_URL`); set `PUBLIC_BASE_URL` only for a custom domain.
 5. **Register the webhook:** PayPal developer dashboard, your app, **Features, Webhooks, Add webhook**. URL: `https://something.onrender.com/api/webhooks/paypal`. Subscribe to: `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED`, `PAYMENT.CAPTURE.PENDING`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED`, `PAYMENT.PAYOUTSBATCH.PROCESSING`, `PAYMENT.PAYOUTSBATCH.SUCCESS`, `PAYMENT.PAYOUTS-ITEM.SUCCEEDED`, `PAYMENT.PAYOUTS-ITEM.DENIED`. Save, copy the **Webhook ID**, set `PAYPAL_WEBHOOK_ID` in Render, redeploy.
 6. **Keep it awake:** Render's free service sleeps after 15 minutes without traffic and takes about a minute to wake. Create a free monitor at https://cron-job.org (or UptimeRobot) that requests `https://something.onrender.com/api/health` every 10 minutes. Judging runs 1 to 15 December, so keep this running.
-7. Checks: open your Render URL and make a real sandbox donation (use a donor account in a private window). It should appear in the Ledger as CAPTURED. In the PayPal dashboard use the webhook simulator to send a test event to your URL and confirm the app answers 200.
+7. Checks: open your Render URL and make a real sandbox donation (use a donor account in a private window). It should appear in the Ledger as CAPTURED. In the PayPal dashboard use the webhook simulator to send a test event to your URL and confirm it shows in the Render logs (simulator events usually fail signature checks, so a 400 there is normal). After the real donation, the webhook event history should show your events delivered with 200.
 
 ## Part G. Before you record the video
 
