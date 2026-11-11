@@ -232,3 +232,13 @@ test('rate limits: checkout and admin get 429 per client IP; webhooks are never 
   }
   stop();
 });
+
+test('admin ping accepts the right key and rejects a wrong one with the standard 401', async () => {
+  const { j, stop } = await boot();
+  assert.deepStrictEqual((await j('/api/admin/ping', { headers: { 'x-admin-key': 'k' } })).body, { ok: true });
+  const bad = await j('/api/admin/ping', { headers: { 'x-admin-key': 'x' } });
+  assert.strictEqual(bad.r.status, 401);
+  assert.strictEqual(bad.body.error.code, 'UNAUTHORIZED');
+  assert.strictEqual((await j('/api/admin/ping')).r.status, 401);
+  stop();
+});

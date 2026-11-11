@@ -122,6 +122,8 @@ function createApp({ store, paypal, cfg, model, metrics }) {
   app.use('/api/admin', rateLimit({ max: lim.admin, name: 'admin requests' }));
   const checkoutLimit = rateLimit({ max: lim.checkout, name: 'checkouts' });
 
+  require('./routes/timeline')(app, { store, model, cfg, requireAdmin }); // /api/timeline, /api/admin/ping
+
   // ---------- mock PayPal pages (dev only) ----------
   if (paypal.mode === 'mock') {
     app.get('/mock-paypal/approve', (req, res) => {
