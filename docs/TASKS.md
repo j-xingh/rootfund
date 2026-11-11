@@ -13,9 +13,9 @@ Status legend: DONE = written and tested here. CODE = written and unit-tested ag
 | B5 | Refund flow | CODE |
 | B6 | Round lifecycle, seed, attack injector, reset | DONE |
 | B7 | Integrity plumbing, admin refund and settle | DONE |
-| B8 | Hardening: validation and admin key done; add rate limiting and review logging | PARTIAL |
+| B8 | Hardening: validation, constant-time admin key, closed-round guard, raw-body webhook verify, PENDING/REVERSED webhooks, throttled payout polling, reconcile captures abandoned approvals, fresh payout batch id per reset. Left: rate limiting | PARTIAL |
 | B9 | Uptime ping, clean-clone test, deploy README | TODO |
-| B10 | Run the MongoDB store against Atlas (`MONGODB_URI`) and fix anything that breaks | TODO |
+| B10 | Run the MongoDB store against Atlas (`MONGODB_URI`) and fix anything that breaks | PARTIAL: full flow passes on an in-memory MongoDB (`test/mongo-store.test.js`); still to run against the real Atlas cluster |
 
 ## Jay
 
