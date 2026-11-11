@@ -3,6 +3,12 @@
 const { analyze } = require('../service');
 
 module.exports = function registerTimeline(app, { store, model, cfg }) {
+  // GET /api/admin/ping: lets the admin screen check the admin key without changing anything.
+  app.get('/api/admin/ping', (req, res) => {
+    if (req.get('x-admin-key') !== cfg.adminKey) return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Wrong admin key.' } });
+    res.json({ ok: true });
+  });
+
   app.get('/api/timeline', async (_req, res, next) => {
     try {
       const a = await analyze(store, model, cfg);

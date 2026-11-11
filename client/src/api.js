@@ -12,6 +12,7 @@ async function call(path, { method = 'GET', body, admin = false } = {}) {
 }
 
 export const api = {
+  ping: () => call('/api/admin/ping', { admin: true }),
   round: () => call('/api/round'),
   allocations: (mode) => call(`/api/allocations?mode=${mode}`),
   integrity: () => call('/api/integrity'),
