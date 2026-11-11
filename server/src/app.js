@@ -5,11 +5,13 @@ const fs = require('fs');
 const crypto = require('crypto');
 const { ROUND_ID, seedDemo, injectAttack, httpError } = require('./rounds');
 const { analyze, maskEmail } = require('./service');
+const { rateLimit } = require('./rateLimit');
 
 const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 function createApp({ store, paypal, cfg, model, metrics }) {
   const app = express();
+  app.set('trust proxy', 1); // Render puts one proxy in front; req.ip is then the real client address
   const hoursSince = (iso) => (Date.now() - new Date(iso).getTime()) / 3_600_000;
   const isAdmin = (req) => {
     const given = Buffer.from(String(req.get('x-admin-key') || ''));
@@ -114,6 +116,12 @@ function createApp({ store, paypal, cfg, model, metrics }) {
 
   app.use(express.json());
 
+  // ---------- rate limits (per client IP; webhooks above are exempt so PayPal is never throttled) ----------
+  const lim = { api: 600, checkout: 20, admin: 60, ...cfg.rateLimits }; // per minute
+  app.use('/api', rateLimit({ max: lim.api, name: 'requests' }));
+  app.use('/api/admin', rateLimit({ max: lim.admin, name: 'admin requests' }));
+  const checkoutLimit = rateLimit({ max: lim.checkout, name: 'checkouts' });
+
   // ---------- mock PayPal pages (dev only) ----------
   if (paypal.mode === 'mock') {
     app.get('/mock-paypal/approve', (req, res) => {
@@ -169,7 +177,7 @@ function createApp({ store, paypal, cfg, model, metrics }) {
     res.json({ items: real.slice(0, limit).map((d) => ({ id: d._id, projectId: d.projectId, amountUsd: d.amountUsd, status: d.status, emailMasked: maskEmail(d.email), captureId: d.paypal?.captureId, refund: d.refund || null, createdAt: d.createdAt })) });
   }));
 
-  app.post('/api/donations/checkout', ah(async (req, res) => {
+  app.post('/api/donations/checkout', checkoutLimit, ah(async (req, res) => {
     const { projectId, amountUsd } = req.body || {};
     if (typeof projectId !== 'string') throw httpError(400, 'projectId must be a string'); // blocks {"$ne":null} in Mongo
     const project = await store.get('projects', projectId);

@@ -11,11 +11,11 @@ const cfg = { publicBaseUrl: 'http://x', poolUsd: 100, adminKey: 'k', ownerEmail
 const ADMIN = { 'x-admin-key': 'k', 'content-type': 'application/json' };
 const JSONH = { 'content-type': 'application/json' };
 
-async function boot() {
+async function boot(over = {}) {
   const store = createMemoryStore();
   const paypal = createMockPayPal(cfg);
   await ensureSeeded(store, cfg);
-  const app = createApp({ store, paypal, cfg, model: loadModel(), metrics: null });
+  const app = createApp({ store, paypal, cfg: { ...cfg, ...over }, model: loadModel(), metrics: null });
   const server = await new Promise((r) => { const s = app.listen(0, () => r(s)); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const j = async (p, o = {}) => { const r = await fetch(base + p, { redirect: 'manual', ...o }); return { r, body: r.headers.get('content-type')?.includes('json') ? await r.json() : null }; };
@@ -208,5 +208,27 @@ test('reconcile captures an order the buyer approved but never returned from', a
   const d = await store.get('donations', co.donationId);
   assert.strictEqual(d.status, 'CAPTURED');
   assert.ok(d.paypal.captureId && d.email === 'mock-donor-3@example.com');
+  stop();
+});
+
+test('rate limits: checkout and admin get 429 per client IP; webhooks are never limited', async () => {
+  const { j, base, stop } = await boot({ rateLimits: { checkout: 2, admin: 3 } });
+  const co = (ip) => j('/api/donations/checkout', { method: 'POST', headers: { ...JSONH, 'x-forwarded-for': ip }, body: JSON.stringify({ projectId: 'p1', amountUsd: 1 }) });
+  assert.strictEqual((await co('1.1.1.1')).r.status, 200);
+  assert.strictEqual((await co('1.1.1.1')).r.status, 200);
+  const blocked = await co('1.1.1.1');
+  assert.strictEqual(blocked.r.status, 429);
+  assert.strictEqual(blocked.body.error.code, 'RATE_LIMITED');
+  assert.ok(Number(blocked.r.headers.get('retry-after')) > 0);
+  assert.strictEqual((await co('2.2.2.2')).r.status, 200, 'another client is not affected');
+
+  const adm = () => j('/api/admin/reconcile', { method: 'POST', headers: { 'x-admin-key': 'wrong', 'x-forwarded-for': '3.3.3.3' } });
+  for (let i = 0; i < 3; i++) assert.strictEqual((await adm()).r.status, 401);
+  assert.strictEqual((await adm()).r.status, 429, 'guessing the admin key is throttled');
+
+  for (let i = 0; i < 5; i++) {
+    const r = await fetch(base + '/api/webhooks/paypal', { method: 'POST', headers: { ...JSONH, 'x-forwarded-for': '1.1.1.1' }, body: JSON.stringify({ id: 'WH-RL-' + i, event_type: 'X' }) });
+    assert.strictEqual(r.status, 200);
+  }
   stop();
 });
