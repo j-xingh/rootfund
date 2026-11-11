@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { ROUND_ID, seedDemo, injectAttack, httpError } = require('./rounds');
 const { analyze, maskEmail } = require('./service');
 
@@ -10,11 +11,15 @@ const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch
 function createApp({ store, paypal, cfg, model, metrics }) {
   const app = express();
   const hoursSince = (iso) => (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  const isAdmin = (req) => {
+    const given = Buffer.from(String(req.get('x-admin-key') || ''));
+    const want = Buffer.from(String(cfg.adminKey));
+    return given.length === want.length && crypto.timingSafeEqual(given, want); // constant-time compare
+  };
   const requireAdmin = (req, _res, next) => {
-    if (req.get('x-admin-key') !== cfg.adminKey) return next(httpError(401, 'admin key missing or wrong', 'UNAUTHORIZED'));
+    if (!isAdmin(req)) return next(httpError(401, 'admin key missing or wrong', 'UNAUTHORIZED'));
     next();
   };
-  const isAdmin = (req) => req.get('x-admin-key') === cfg.adminKey;
 
   // ---------- webhook (must see the RAW body, so it is registered before express.json) ----------
   async function refreshSettlement() {

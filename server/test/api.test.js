@@ -134,3 +134,13 @@ test('checkout rejects non-string projectId and closed rounds', async () => {
   assert.strictEqual(closed.body.error.code, 'ROUND_CLOSED');
   stop();
 });
+
+test('admin endpoints reject a wrong key of any length', async () => {
+  const { j, stop } = await boot();
+  for (const key of ['x', 'kk', 'K']) {
+    const { r } = await j('/api/admin/reset-demo', { method: 'POST', headers: { ...JSONH, 'x-admin-key': key }, body: '{}' });
+    assert.strictEqual(r.status, 401, `key ${key}`);
+  }
+  assert.strictEqual((await j('/api/admin/reset-demo', { method: 'POST', headers: ADMIN, body: '{}' })).r.status, 200);
+  stop();
+});
