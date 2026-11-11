@@ -22,15 +22,21 @@ function createApp({ store, paypal, cfg, model, metrics }) {
   };
 
   // ---------- webhook (must see the RAW body, so it is registered before express.json) ----------
-  async function refreshSettlement() {
+  // The UI polls GET /api/settlement, so only ask PayPal when something can still change (at most every 3 s).
+  const BATCH_FINAL = ['SUCCESS', 'DENIED', 'CANCELED'];
+  const ITEM_OPEN = ['PENDING', 'UNCLAIMED', 'ONHOLD', undefined, null];
+  async function refreshSettlement({ force = false } = {}) {
     const s = await store.get('settlements', ROUND_ID);
     if (!s || !s.batchId) return s;
+    const done = BATCH_FINAL.includes(s.status) && s.items.every((it) => !ITEM_OPEN.includes(it.status));
+    const recent = s.checkedAt && Date.now() - new Date(s.checkedAt).getTime() < 3000;
+    if (!force && (done || recent)) return s;
     const b = await paypal.getPayoutBatch(s.batchId);
     const items = s.items.map((it) => {
       const f = (b.items || []).find((x) => x.senderItemId === it.senderItemId);
       return f ? { ...it, status: f.status, error: f.error } : it;
     });
-    const patch = { status: b.status, items };
+    const patch = { status: b.status, items, checkedAt: new Date().toISOString() };
     await store.patch('settlements', ROUND_ID, patch);
     if (b.status === 'SUCCESS') await store.patch('rounds', ROUND_ID, { status: 'SETTLED' });
     return store.get('settlements', ROUND_ID);
@@ -85,7 +91,7 @@ function createApp({ store, paypal, cfg, model, metrics }) {
       case 'PAYMENT.PAYOUTS-ITEM.SUCCEEDED':
       case 'PAYMENT.PAYOUTS-ITEM.DENIED':
       case 'PAYMENT.PAYOUTS-ITEM.FAILED':
-        await refreshSettlement();
+        await refreshSettlement({ force: true });
         break;
       default:
         break; // events we do not use are acknowledged and ignored
@@ -247,7 +253,7 @@ function createApp({ store, paypal, cfg, model, metrics }) {
     const senderBatchId = `${round.settleKey || ROUND_ID}-settle`;
     const b = await paypal.createPayoutBatch({ senderBatchId, items });
     await store.insert('settlements', { _id: ROUND_ID, roundId: ROUND_ID, senderBatchId, batchId: b.batchId, status: b.status, createdAt: new Date().toISOString(), items: items.map((i) => ({ projectId: i.projectId, receiver: i.receiver, amountUsd: i.amountUsd, senderItemId: i.senderItemId, status: 'PENDING' })) });
-    res.json({ settlement: await refreshSettlement() });
+    res.json({ settlement: await refreshSettlement({ force: true }) });
   }));
 
   app.get('/api/settlement', ah(async (_req, res) => {
@@ -268,7 +274,7 @@ function createApp({ store, paypal, cfg, model, metrics }) {
         }
       }
     }
-    out.settlement = await refreshSettlement();
+    out.settlement = await refreshSettlement({ force: true });
     res.json(out);
   }));
 

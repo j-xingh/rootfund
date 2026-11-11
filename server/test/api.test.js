@@ -179,3 +179,19 @@ test('webhooks: COMPLETED falls back to order id; PENDING and REVERSED are handl
   assert.strictEqual((await store.get('donations', a._id)).status, 'REVERSED');
   stop();
 });
+
+test('settlement polling does not call PayPal once the batch is final', async () => {
+  const { j, paypal, stop } = await boot();
+  let calls = 0;
+  const real = paypal.getPayoutBatch.bind(paypal);
+  paypal.getPayoutBatch = (id) => { calls++; return real(id); };
+  await j('/api/admin/settle', { method: 'POST', headers: ADMIN, body: JSON.stringify({ approve: true }) });
+  assert.strictEqual(calls, 1, 'settle refreshes once');
+  const a = (await j('/api/settlement')).body.settlement;
+  await j('/api/settlement');
+  assert.strictEqual(a.status, 'SUCCESS');
+  assert.strictEqual(calls, 1, 'final batch is served from the store');
+  await j('/api/admin/reconcile', { method: 'POST', headers: ADMIN, body: '{}' });
+  assert.strictEqual(calls, 2, 'reconcile always re-reads PayPal');
+  stop();
+});
