@@ -1,4 +1,4 @@
-// Thin wrapper around the server API. Admin key is kept in sessionStorage (never in code).
+// Thin wrapper around the server API. The admin key is kept in sessionStorage (never in code).
 export const getAdminKey = () => sessionStorage.getItem('adminKey') || '';
 export const setAdminKey = (k) => sessionStorage.setItem('adminKey', k);
 
@@ -15,6 +15,7 @@ export const api = {
   round: () => call('/api/round'),
   allocations: (mode) => call(`/api/allocations?mode=${mode}`),
   integrity: () => call('/api/integrity'),
+  timeline: () => call('/api/timeline'),
   donations: () => call('/api/donations?limit=20'),
   settlement: () => call('/api/settlement'),
   checkout: (projectId, amountUsd) => call('/api/donations/checkout', { method: 'POST', body: { projectId, amountUsd } }),

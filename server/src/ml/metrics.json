@@ -11,7 +11,7 @@
       "naive"
     ],
     "note": "Simulated data. evasive is never seen in training.",
-    "generatedAt": "2026-11-10T20:44:20.864Z"
+    "generatedAt": "2026-11-10T21:34:54.054Z"
   },
   "attacks": {
     "naive": {
@@ -43,10 +43,10 @@
       "precision": 0.991,
       "recall": 1,
       "f1": 0.995,
-      "honestDonorsFlagged": 2.4,
+      "honestDonorsFlagged": 2.333,
       "hybrid": {
         "recall": 1,
-        "honestDonorsFlagged": 2.4
+        "honestDonorsFlagged": 2.333
       },
       "baselineRule": {
         "precision": 0,

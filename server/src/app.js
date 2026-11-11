@@ -82,6 +82,7 @@ function createApp({ store, paypal, cfg, model, metrics }) {
   }));
 
   app.use(express.json());
+  require('./routes/timeline')(app, { store, model, cfg }); // /api/timeline
 
   // ---------- mock PayPal pages (dev only) ----------
   if (paypal.mode === 'mock') {
