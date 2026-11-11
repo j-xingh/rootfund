@@ -1,0 +1,34 @@
+# Render Blueprint: Render dashboard > New > Blueprint > pick this repo. Free web service.
+# Values marked sync: false are asked for once in the dashboard (they are secrets or account specific).
+services:
+  - type: web
+    name: rootfund
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      - key: POOL_USD
+        value: "100"
+      - key: ADMIN_KEY
+        generateValue: true # random secret; read it in the dashboard (Environment tab) and share it with Jay
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false # fill in after registering the webhook (docs/DEPLOY.md step 4)
+      - key: PROJECT_OWNER_EMAILS
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      # PUBLIC_BASE_URL is optional on Render: the app falls back to RENDER_EXTERNAL_URL, which Render sets for you.

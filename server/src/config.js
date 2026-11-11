@@ -5,7 +5,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const env = process.env;
 const cfg = {
   port: Number(env.PORT || 3000),
-  publicBaseUrl: (env.PUBLIC_BASE_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/$/, ''),
+  publicBaseUrl: (env.PUBLIC_BASE_URL || env.RENDER_EXTERNAL_URL || `http://localhost:${env.PORT || 3000}`).replace(/\/$/, ''), // Render sets RENDER_EXTERNAL_URL itself
   paypalMode: env.PAYPAL_MODE || 'mock', // 'mock' (no credentials needed) or 'sandbox' (real PayPal sandbox)
   paypalBaseUrl: env.PAYPAL_BASE_URL || 'https://api-m.sandbox.paypal.com',
   paypalClientId: env.PAYPAL_CLIENT_ID || '',
@@ -24,7 +24,7 @@ function validate(c = cfg) {
     if (!c.paypalWebhookId) problems.push('PAYPAL_WEBHOOK_ID is missing: webhooks will be rejected until you set it');
     if (c.ownerEmails.length === 0) problems.push('PROJECT_OWNER_EMAILS is empty: payouts need sandbox personal account emails');
   }
-  if (c.adminKey === 'dev-admin-key' && c.publicBaseUrl.startsWith('https://')) problems.push('ADMIN_KEY is still the default on a public URL: change it');
+  if (['dev-admin-key', 'change-me'].includes(c.adminKey) && c.publicBaseUrl.startsWith('https://')) problems.push('ADMIN_KEY is still the default on a public URL: change it');
   return problems;
 }
 

@@ -14,6 +14,7 @@
     "test": "npm --prefix server test",
     "ml:data": "node scripts/export-dataset.js",
     "ml:all": "node scripts/ml-all.js",
-    "gate1": "node scripts/gate1.js"
+    "gate1": "node scripts/gate1.js",
+    "smoke": "node scripts/smoke.js"
   }
 }
