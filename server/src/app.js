@@ -223,8 +223,10 @@ function createApp({ store, paypal, cfg, model, metrics }) {
       senderItemId: `${ROUND_ID}-${i.projectId}`, note: req.body?.simulateFailure && i === a.protected.items.find((x) => x.matchCents > 0) ? 'ERRPYO002' : `Rootfund match for ${i.name}`,
     }));
     if (!items.length) throw httpError(400, 'nothing to settle: no matched amounts yet');
-    const b = await paypal.createPayoutBatch({ senderBatchId: `${ROUND_ID}-settle-1`, items });
-    await store.insert('settlements', { _id: ROUND_ID, roundId: ROUND_ID, batchId: b.batchId, status: b.status, createdAt: new Date().toISOString(), items: items.map((i) => ({ projectId: i.projectId, receiver: i.receiver, amountUsd: i.amountUsd, senderItemId: i.senderItemId, status: 'PENDING' })) });
+    const round = await store.get('rounds', ROUND_ID);
+    const senderBatchId = `${round.settleKey || ROUND_ID}-settle`;
+    const b = await paypal.createPayoutBatch({ senderBatchId, items });
+    await store.insert('settlements', { _id: ROUND_ID, roundId: ROUND_ID, senderBatchId, batchId: b.batchId, status: b.status, createdAt: new Date().toISOString(), items: items.map((i) => ({ projectId: i.projectId, receiver: i.receiver, amountUsd: i.amountUsd, senderItemId: i.senderItemId, status: 'PENDING' })) });
     res.json({ settlement: await refreshSettlement() });
   }));
 

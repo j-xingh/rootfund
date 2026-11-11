@@ -144,3 +144,14 @@ test('admin endpoints reject a wrong key of any length', async () => {
   assert.strictEqual((await j('/api/admin/reset-demo', { method: 'POST', headers: ADMIN, body: '{}' })).r.status, 200);
   stop();
 });
+
+test('each reset gets a new payout sender_batch_id', async () => {
+  const { j, stop } = await boot();
+  const settle = async () => (await j('/api/admin/settle', { method: 'POST', headers: ADMIN, body: JSON.stringify({ approve: true }) })).body.settlement.senderBatchId;
+  const first = await settle();
+  await new Promise((r) => setTimeout(r, 5)); // settleKey is time-based
+  await j('/api/admin/reset-demo', { method: 'POST', headers: ADMIN, body: '{}' });
+  const second = await settle();
+  assert.ok(first && second && first !== second, `${first} vs ${second}`);
+  stop();
+});

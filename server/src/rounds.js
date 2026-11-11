@@ -19,7 +19,9 @@ async function seedDemo(store, cfg, { keepReal = false } = {}) {
   await store.remove('donations', keepReal ? { source: 'simulated' } : {});
   for (const c of ['rounds', 'projects', 'settlements']) await store.remove(c, {});
   const sc = buildScenario({ seed: 2026, honest: 250, attacks: [] });
-  await store.insert('rounds', { _id: ROUND_ID, status: 'OPEN', poolUsd: cfg.poolUsd, openedAt: new Date().toISOString(), baseline: sc.baseline });
+  // settleKey changes on every reset, so each rehearsal gets a new PayPal sender_batch_id (PayPal refuses reused ones).
+  const settleKey = `${ROUND_ID}-${Date.now().toString(36)}`;
+  await store.insert('rounds', { _id: ROUND_ID, status: 'OPEN', poolUsd: cfg.poolUsd, openedAt: new Date().toISOString(), baseline: sc.baseline, settleKey });
   await store.insertMany('projects', PROJECT_IDS.map((id, i) => ({
     _id: id, name: PROJECT_INFO[i][0], description: PROJECT_INFO[i][1],
     ownerEmail: cfg.ownerEmails.length ? cfg.ownerEmails[i % cfg.ownerEmails.length] : `owner-${id}@example.com`,
