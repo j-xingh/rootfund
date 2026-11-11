@@ -113,3 +113,13 @@ test('settlement requires approval, pays protected matches, and is idempotent', 
   assert.strictEqual(second.settlement.batchId, first.settlement.batchId);
   stop();
 });
+
+test('ledger works while a donation is still unpaid (email is null)', async () => {
+  const { j, stop } = await boot();
+  await j('/api/donations/checkout', { method: 'POST', headers: JSONH, body: JSON.stringify({ projectId: 'p1', amountUsd: 3 }) });
+  const { r, body } = await j('/api/donations');
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(body.items[0].status, 'CREATED');
+  assert.strictEqual(body.items[0].emailMasked, '***');
+  stop();
+});

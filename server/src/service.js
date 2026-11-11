@@ -4,8 +4,8 @@ const { scoreDonors, explain } = require('./ml/scorer');
 const { weightsFromScores, CAP_SHARE, isFlagged } = require('./ml/policy');
 const { ROUND_ID } = require('./rounds');
 
-const maskEmail = (e = '') => {
-  const [l, d] = e.split('@');
+const maskEmail = (e) => {
+  const [l, d] = String(e ?? '').split('@'); // null until a donation is captured
   return d ? `${l.slice(0, 2)}***@${d}` : '***';
 };
 
