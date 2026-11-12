@@ -1,51 +1,41 @@
 import React from 'react';
+import { pct1 } from '../lib/format.js';
 
-const pct = (v) => `${(v * 100).toFixed(1)}%`;
-const LABEL = {
-  naive: 'Naive ring (burst, odd emails)',
-  jitter: 'Jitter ring (spread out)',
-  adaptive: 'Adaptive ring (adds decoys)',
-  evasive: 'Evasive ring (never seen in training)',
-};
+const LABEL = { naive: 'Naive ring (burst, odd emails)', jitter: 'Jitter ring (spread out)', adaptive: 'Adaptive ring (adds decoys)', evasive: 'Evasive ring (never seen in training)' };
+const f2 = (v) => Number(v).toFixed(2);
 
 export default function MetricsCard({ metrics }) {
-  if (!metrics) return <p className="muted">No metrics yet. Run npm run ml:all.</p>;
+  if (!metrics) return <p className="muted">No metrics yet. Run <code>npm run ml:all</code>.</p>;
   const m = metrics.meta;
+  const share = (s) => (s.hybridCapped ?? s.hybrid) * 100;
   return (
     <div>
-      <p className="muted">
-        Simulated data: {m.honestDonors} honest donors, a ring of {m.ringSize} fake donors, {m.seeds} seeded runs. Numbers show the share of the
-        matching pool captured by the attacked project (with no attack it is {pct(metrics.attacks.naive.targetPoolShare.clean)}).
+      <p className="small">
+        <b>Simulated data.</b> {m.honestDonors} honest donors, a ring of {m.ringSize} fake donors, {m.seeds} seeded runs. Figures are the share of the matching pool captured by the attacked project; with no attack it is {pct1(metrics.attacks.naive.targetPoolShare.clean * 100)}.
       </p>
       <div className="scroll-x">
         <table>
-          <thead><tr><th>Attack</th><th>Precision</th><th>Recall</th><th>Naive QF</th><th>Rootfund</th></tr></thead>
+          <caption className="sr-only">Detector results by attack type</caption>
+          <thead><tr><th>Attack</th><th className="r">Precision</th><th className="r">Recall</th><th className="r">Plain quadratic funding</th><th className="r">With Rootfund</th></tr></thead>
           <tbody>
             {Object.entries(metrics.attacks).map(([k, v]) => (
-              <tr key={k}>
-                <td>{LABEL[k] || k}</td>
-                <td>{v.precision.toFixed(2)}</td>
-                <td>{v.recall.toFixed(2)}</td>
-                <td className="bad-text">{pct(v.targetPoolShare.naive)}</td>
-                <td className="good-text">{pct(v.targetPoolShare.hybridCapped ?? v.targetPoolShare.hybrid)}</td>
-              </tr>
+              <tr key={k}><td>{LABEL[k] || k}</td><td className="r num">{f2(v.precision)}</td><td className="r num">{f2(v.recall)}</td><td className="r num">{pct1(v.targetPoolShare.naive * 100)}</td><td className="r num">{pct1(share(v.targetPoolShare))}</td></tr>
             ))}
           </tbody>
         </table>
       </div>
-      <h3>Honest limits</h3>
-      <p>The model alone does not generalize across attack families. When one family is left out of training, recall on it is:</p>
+      <h3 style={{ marginTop: 22 }}>Honest limits</h3>
+      <p>The model alone does not generalize across attack families. With one family left out of training, recall on it was:</p>
       <div className="scroll-x">
         <table>
-          <thead><tr><th>Family left out</th><th>Recall</th><th>Precision</th></tr></thead>
+          <caption className="sr-only">Leave-one-family-out results</caption>
+          <thead><tr><th>Family left out</th><th className="r">Recall</th><th className="r">Precision</th></tr></thead>
           <tbody>
-            {Object.entries(metrics.leaveOneOut || {}).map(([k, v]) => (
-              <tr key={k}><td>{LABEL[k] || k}</td><td>{v.recall.toFixed(2)}</td><td>{v.precision.toFixed(2)}</td></tr>
-            ))}
+            {Object.entries(metrics.leaveOneOut || {}).map(([k, v]) => <tr key={k}><td>{LABEL[k] || k}</td><td className="r num">{f2(v.recall)}</td><td className="r num">{f2(v.precision)}</td></tr>)}
           </tbody>
         </table>
       </div>
-      <p className="muted">That is why Rootfund combines the model with a burst rule, a per-project cap, and a human approval step before any money moves.</p>
+      <p className="small muted">That is why Rootfund pairs the model with a burst rule, a per-project cap, and a human approval step before any money moves.</p>
     </div>
   );
 }

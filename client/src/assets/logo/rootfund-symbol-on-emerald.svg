@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 230" role="img" aria-label="Rootfund community root symbol">
+<rect width="200" height="230" rx="28" fill="#006853"/>
+
+<g stroke="none" stroke-linejoin="round">
+  <!-- central crown / contributor -->
+  <circle cx="100" cy="35" r="18" fill="#F2D000"/>
+  <!-- left branch -->
+  <path d="M91 91
+           C75 91 65 82 54 73
+           C42 64 30 62 22 72
+           C11 86 17 107 33 115
+           C46 122 61 119 73 128
+           L91 141 Z" fill="#A291E1"/>
+  <!-- right branch -->
+  <path d="M109 91
+           C125 91 135 82 146 73
+           C158 64 170 62 178 72
+           C189 86 183 107 167 115
+           C154 122 139 119 127 128
+           L109 141 Z" fill="#F56504"/>
+  <!-- central trunk -->
+  <path d="M82 112
+           C82 99 89 91 100 85
+           C111 91 118 99 118 112
+           L118 190
+           C118 201 110 209 100 209
+           C90 209 82 201 82 190 Z" fill="#F2D000"/>
+  <!-- community roots / base nodes -->
+  <path d="M20 159 H80 V190
+           C80 202 71 211 59 211 H31
+           C19 211 10 202 10 190 V169
+           C10 163 14 159 20 159 Z" fill="#006853"/>
+  <path d="M120 159 H180
+           C186 159 190 163 190 169 V190
+           C190 202 181 211 169 211 H141
+           C129 211 120 202 120 190 Z" fill="#A291E1"/>
+</g>
+
+</svg>
